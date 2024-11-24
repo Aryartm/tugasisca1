@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Film</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            color: #444;
+        }
+        h2 {
+            text-align: center;
+            color: #444;
+        }
+        form, .actions {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input, textarea, button, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .scene {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+        .scene-heading {
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #222;
+        }
+        .dialogue-container {
+            margin-top: 10px;
+        }
+        .dialogue {
+            margin: 5px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dialogue .text {
+            flex: 1;
+        }
+        .buttons {
+            margin-left: 10px;
+        }
+        .buttons button {
+            padding: 5px 10px;
+            margin-left: 5px;
+            border: none;
+            border-radius: 3px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .edit-btn {
+            background-color: #ffc107;
+            color: #fff;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        .print-btn {
+            width: auto;
+            background-color: #007bff;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tugas Intelligence Script and Concept Art</h1>
+        <h2>Arya Eko Putra 24.55.1599</h2>
+        <form id="sceneForm">
+            <label for="scene">Scene (Judul)</label>
+            <input type="text" id="scene" placeholder="Contoh: INT. RUANG TAMU - SIANG" required>
+            
+            <label for="action">Aksi</label>
+            <textarea id="action" placeholder="Deskripsikan aksi dalam adegan" required></textarea>
+            
+            <button type="submit">Tambahkan Scene</button>
+        </form>
+
+        <form id="dialogueForm" style="margin-top: 20px;">
+            <label for="sceneSelect">Pilih Scene</label>
+            <select id="sceneSelect" required>
+                <option value="" disabled selected>Pilih scene untuk menambahkan dialog</option>
+            </select>
+
+            <label for="character">Nama Karakter</label>
+            <input type="text" id="character" placeholder="Contoh: ALYA" required>
+            
+            <label for="dialogue">Dialog</label>
+            <textarea id="dialogue" placeholder="Masukkan dialog karakter" required></textarea>
+            
+            <button type="submit" class="add-dialogue-btn">Tambahkan Dialog</button>
+        </form>
+
+        <div class="actions">
+            <button class="print-btn" id="printBtn">Cetak ke PDF</button>
+        </div>
+
+        <div id="output" class="output">
+            <h2>Hasil Script</h2>
+            <div id="scriptDisplay"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script>
+        const sceneForm = document.getElementById('sceneForm');
+        const dialogueForm = document.getElementById('dialogueForm');
+        const scriptDisplay = document.getElementById('scriptDisplay');
+        const sceneSelect = document.getElementById('sceneSelect');
+        const printBtn = document.getElementById('printBtn');
+
+        sceneForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const scene = document.getElementById('scene').value;
+            const action = document.getElementById('action').value;
+            addScene(scene, action);
+            sceneForm.reset();
+        });
+
+        dialogueForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const selectedSceneId = sceneSelect.value;
+            const character = document.getElementById('character').value;
+            const dialogue = document.getElementById('dialogue').value;
+            if (selectedSceneId) {
+                addDialogueToScene(selectedSceneId, character, dialogue);
+            }
+            dialogueForm.reset();
+        });
+
+        printBtn.addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let y = 10;
+
+            document.querySelectorAll('.scene').forEach(scene => {
+                const heading = scene.querySelector('.scene-heading').textContent;
+                const action = scene.querySelector('.action')?.textContent;
+
+                doc.text(`Scene: ${heading}`, 10, y);
+                y += 10;
+
+                if (action) {
+                    doc.text(`Aksi: ${action}`, 10, y);
+                    y += 10;
+                }
+
+                scene.querySelectorAll('.dialogue').forEach(dialogue => {
+                    const text = dialogue.querySelector('.text').textContent;
+                    doc.text(text, 10, y);
+                    y += 10;
+                });
+
+                y += 10; // Add space between scenes
+            });
+
+            doc.save('script.pdf');
+        });
+
+        function addScene(scene, action) {
+            const sceneId = `scene-${Date.now()}`;
+            const sceneElement = document.createElement('div');
+            sceneElement.classList.add('scene');
+            sceneElement.setAttribute('id', sceneId);
+
+            const sceneHeading = document.createElement('div');
+            sceneHeading.classList.add('scene-heading');
+            sceneHeading.textContent = scene;
+
+            const actionElement = document.createElement('div');
+            actionElement.classList.add('action');
+            actionElement.textContent = action;
+
+            const dialogueContainer = document.createElement('div');
+            dialogueContainer.classList.add('dialogue-container');
+
+            sceneElement.appendChild(sceneHeading);
+            sceneElement.appendChild(actionElement);
+            sceneElement.appendChild(dialogueContainer);
+
+            scriptDisplay.appendChild(sceneElement);
+
+            const option = document.createElement('option');
+            option.value = sceneId;
+            option.textContent = scene;
+            sceneSelect.appendChild(option);
+        }
+
+        function addDialogueToScene(sceneId, character, dialogue) {
+            const sceneElement = document.getElementById(sceneId);
+            const dialogueContainer = sceneElement.querySelector('.dialogue-container');
+
+            const dialogueElement = document.createElement('div');
+            dialogueElement.classList.add('dialogue');
+
+            const text = document.createElement('div');
+            text.classList.add('text');
+            text.textContent = `${character}: "${dialogue}"`;
+
+            const buttons = document.createElement('div');
+            buttons.classList.add('buttons');
+
+            const editButton = document.createElement('button');
+            editButton.classList.add('edit-btn');
+            editButton.textContent = 'Edit';
+            editButton.addEventListener('click', () => editDialogue(dialogueElement, character, dialogue));
+
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete-btn');
+            deleteButton.textContent = 'Hapus';
+            deleteButton.addEventListener('click', () => dialogueElement.remove());
+
+            buttons.appendChild(editButton);
+            buttons.appendChild(deleteButton);
+
+            dialogueElement.appendChild(text);
+            dialogueElement.appendChild(buttons);
+
+            dialogueContainer.appendChild(dialogueElement);
+        }
+
+        function editDialogue(dialogueElement, character, dialogue) {
+            document.getElementById('character').value = character;
+            document.getElementById('dialogue').value = dialogue;
+            dialogueElement.remove();
+        }
+    </script>
+</body>
+</html>
